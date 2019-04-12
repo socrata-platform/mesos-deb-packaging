@@ -1,0 +1,45 @@
+FROM ubuntu:18.04
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y update && \
+  DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade && \
+  DEBIAN_FRONTEND=noninteractive apt-get -y install \
+    autoconf \
+    automake \
+    build-essential \
+    git \
+    iputils-ping \
+    libapr1-dev \
+    libcurl3 \
+    libcurl4-nss-dev \
+    libsasl2-dev \
+    libsasl2-modules \
+    libssl-dev \
+    libsvn-dev \
+    libtool \
+    make \
+    maven \
+    openjdk-8-jdk \
+    python-dev \
+    python-dev \
+    python-six \
+    python-virtualenv \
+    ruby \
+    ruby-dev \
+    tar \
+    wget \
+    zlib1g-dev
+
+# Just to be safe, stick with java8 for now since that is what we have at runtime currently.
+RUN update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+
+RUN gem install fpm
+
+WORKDIR /tmp/mesos-build
+
+ADD . /tmp/mesos-build
+
+# This logically belongs at the top, but changing the default invalidates the build cache
+ARG mesos_version=1.8.0
+ARG build_version=dev
+
+RUN MAKEFLAGS=-j8 ./build_mesos --build-version $build_version --repo https://github.com/apache/mesos.git?ref=$mesos_version
